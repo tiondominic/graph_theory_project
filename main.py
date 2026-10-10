@@ -3,23 +3,19 @@ import random
 import visual
 
 
-def build_distances(edges, houses):
-  dist = {(a, b): (0 if a == b else float('inf')) for a in houses for b in houses}
-  for weight, source, destination in edges:
-    if weight < dist[(source, destination)]:
-      dist[(source, destination)] = weight
-      dist[(destination, source)] = weight
+def build_distances(distance_matrix, buildings):
+  dist = {}
 
-  for k in houses:
-    for i in houses:
-      for j in houses:
-        if dist[(i, k)] + dist[(k, j)] < dist[(i, j)]:
-          dist[(i, j)] = dist[(i, k)] + dist[(k, j)]
+  for i, source in enumerate(buildings):
+    for j, destination in enumerate(buildings):
+      dist[(source, destination)] = distance_matrix[source][j]
 
   return dist
 
+
 def calculate_distance(point1, point2):
   return distances[(point1, point2)]
+
 
 def divide_points(points):
   first = points[0]
@@ -27,8 +23,9 @@ def divide_points(points):
   mid = len(points) // 2
   return points[:mid], points[mid:]
 
+
 def tour_distance(tour):
-  return sum(calculate_distance(tour[i], tour[(i + 1) % len(tour)]) for i in range(len(tour)))
+  return round(sum(calculate_distance(tour[i], tour[(i + 1) % len(tour)]) for i in range(len(tour))), 9)
 
 def find_shortest(tour1, tour2):
   min_distance = float('inf')
@@ -47,9 +44,11 @@ def find_shortest(tour1, tour2):
 
   return best
 
+
 def dac(points):
   if len(points) == 1:
     return points, 0
+
   if len(points) == 2:
     return points, 2 * calculate_distance(points[0], points[1])
 
@@ -62,36 +61,35 @@ def dac(points):
 
   return merged_tour, merged_distance
 
+
 if __name__ == "__main__":
+  destination_names = {
+    "A": "Centrio",
+    "B": "KetKai",
+    "C": "SM Downtown",
+    "D": "Xavier University",
+    "E": "City Hall",
+    "F": "Gaston Park"
+  }
 
-  houses = ["W", "A", "B", "C", "D", "E", "F"]
+  distance_matrix = {
+    "A": [0, 1.2, 0.6, 1.5, 2.2, 2.4],
+    "B": [1.2, 0, 1.0, 1.7, 2.8, 3.0],
+    "C": [0.6, 1.0, 0, 1.8, 2.6, 2.8],
+    "D": [1.5, 1.7, 1.8, 0, 1.5, 1.3],
+    "E": [2.2, 2.8, 2.6, 1.5, 0, 0.4],
+    "F": [2.4, 3.0, 2.8, 1.3, 0.4, 0]
+  }
 
-  edges = [
-    (4, "W", "A"),
-    (5, "W", "D"),
-    (2, "A", "B"),
-    (3, "A", "C"),
-    (2, "B", "C"),
-    (2, "D", "E"),
-    (4, "D", "F"),
-    (3, "E", "F"),
-    (8, "A", "D"),
-    (6, "B", "D"),
-    (7, "B", "E"),
-    (5, "C", "E"),
-  ]
-  print(edges)
+  buildings = ["A", "B", "C", "D", "E", "F"]
 
-  distances = build_distances(edges, houses)
+  distances = build_distances(distance_matrix, buildings)
 
-  tour, total_distance = dac(houses)
-  start = tour.index("W")
-  tour = tour[start:] + tour[:start] + ["W"]
+  tour, total_distance = dac(buildings.copy())
+  tour = tour + [tour[0]]
+
   print("Tour:", tour)
-  print("Total Distance: ", total_distance)
+  print("Route:", " -> ".join(destination_names[b] for b in tour))
+  print("Total Distance:", total_distance)
 
-  nodes = {}
-  for i, house in enumerate(houses):
-    nodes[house] = f"House {i}"
-
-  visual.visualize_tour(nodes, tour, edges=edges)
+  visual.visualize_tour(destination_names, tour)
